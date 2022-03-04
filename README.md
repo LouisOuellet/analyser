@@ -11,12 +11,13 @@ Usage: ./analyser [options]
 
 Options:
 
--v                     => Enable Verbose Mode
 -d                     => Enable Debug Mode
+-v                     => Enable Verbose Mode
 -e                     => Compile errors and warnings after execution
-                          (Requires Verbose and Debug mode enabled)
+                          (Requires Verbose mode enabled)
 -s                     => Send report via email
 -f                     => Disable all formatting
+
 ```
 
 ## Functions
