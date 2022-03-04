@@ -30,18 +30,20 @@ helpOptions="${helpOptions}"
 #==============================================================================
 
 function sasl(){
-  if [[ -f "/tmp/ips.list" ]]; then rm /tmp/ips.list; fi
-  if [[ -f "/tmp/sasl.pid" ]]; then rm /tmp/sasl.pid; fi
-  touch /tmp/ips.list
-  touch /tmp/sasl.pid
+  ips="/tmp/ips.list"
+  sasl="/tmp/sasl.pid"
+  if [[ -f "${ips}" ]]; then rm ${ips}; fi
+  if [[ -f "${sasl}" ]]; then rm ${sasl}; fi
+  if [[ ! -f "${ips}" ]]; then touch ${ips}; fi
+  if [[ ! -f "${sasl}" ]]; then touch ${sasl}; fi
   while true; do
     for ip in $(cat /var/log/syslog | grep 'SASL LOGIN authentication failed' | cut -d[ -f3 | cut -d] -f1); do
-      if [[ "$(cat /tmp/ips.list | grep $ip)" == "" ]]; then
-        echo $ip | tee -a /tmp/ips.list | dbg i c
+      if [[ "$(cat ${ips} | grep $ip)" == "" ]]; then
+        echo $ip | tee -a ${ips} | dbg i c
       fi
     done
   done &
-  echo %1 > /tmp/sasl.pid
+  echo %1 > ${sasl}
   while read -sn 1 key && [[ ${key} != 'q' ]]; do
     echo "Key ${key}" > /dev/null
   done
