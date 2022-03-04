@@ -129,6 +129,12 @@ shift $((OPTIND -1))
 for function in $@; do
   if [[ $(type -t ${function}) == function ]]; then
     eval ${function}
+  else
+    echo
+    echo "Invalid function: ${function}"
+    echo
+    help
+    exit 0
   fi
 done
 
