@@ -126,25 +126,25 @@ shift $((OPTIND -1))
 # RUN SCRIPT
 #==============================================================================
 
-for function in $@; do
+if [[ "$1" != "" ]]; then
+  function=$1
+  shift $@
   if [[ $(type -t ${function}) == function ]]; then
-    if [[ "${function}" != "exec" ]] && [[ "${function}" != "pkg" ]] && [[ "${function}" != "send" ]] && [[ "${function}" != "dbg" ]] && [[ "${function}" != "error" ]]; then
-      eval ${function}
-    else
-      echo
-      echo "Invalid function: ${function}"
-      echo
-      help
-      exit 0
-    fi
+    eval ${function} $@
   else
     echo
-    echo "Invalid function: ${function}"
+    echo "Invalid function: ${function} $@"
     echo
     help
     exit 0
   fi
-done
+else
+  echo
+  echo "Invalid function: ${function} $@"
+  echo
+  help
+  exit 0
+fi
 
 if [[ "${verboseMode}" == "true" ]]; then
   duration=$SECONDS
