@@ -33,7 +33,7 @@ function sasl(){
   ips="/tmp/ips.list"
   sasl="/tmp/sasl.pid"
   if [[ -f "${ips}" ]]; then rm ${ips}; fi
-  if [[ -f "${sasl}" ]]; then rm ${sasl}; fi
+  if [[ -f "${sasl}" ]]; then kill $(cat ${sasl});rm ${sasl}; fi
   if [[ ! -f "${ips}" ]]; then touch ${ips}; fi
   if [[ ! -f "${sasl}" ]]; then touch ${sasl}; fi
   while true; do
