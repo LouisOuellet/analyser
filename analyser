@@ -1,0 +1,101 @@
+#!/bin/bash
+#==============================================================================
+#TITLE:            analyser
+#DESCRIPTION:      This tool analyses various system logs for key information
+#AUTHOR:           Louis Ouellet
+#DATE:             2022-03-04
+#VERSION:          22.03-04
+
+#==============================================================================
+# INIT
+#==============================================================================
+
+# Source Basher
+source ${scriptDirectory}vendor/basher/basher
+
+#==============================================================================
+# SCRIPT PERSONALISATION
+#==============================================================================
+
+# Script Personalisation
+helpOptions="${helpOptions}"
+
+#==============================================================================
+# FUNCTIONS
+#==============================================================================
+
+function sasl(){
+  touch /tmp/ips.list
+  touch /tmp/sasl.pid
+  while true; do
+    for ip in $(cat /var/log/syslog | grep 'SASL LOGIN authentication failed' | cut -d[ -f3 | cut -d] -f1); do
+      if [[ "$(cat ips.list | grep $ip)" == "" ]]; then
+        echo $ip | tee -a /tmp/ips.list | dbg i c
+      fi
+    done
+  done &
+  echo %1 > /tmp/sasl.pid
+  while read -sn 1 key && [[ ${key} != 'q' ]]; do
+    echo "Key ${key}" > /dev/null
+  done
+  kill %1
+}
+
+#==============================================================================
+# RUN OPTIONS & FUNCTIONS
+#==============================================================================
+
+parameters=
+while getopts ":p:" option; do
+	case "${option}" in
+    p)
+      parameters="${parameters} ${OPTARG}"
+      ;;
+    \? )
+      echo "Invalid option: $OPTARG" 1>&2
+      help
+      exit 0
+      ;;
+    : )
+      echo "Invalid option: $OPTARG requires an argument" 1>&2
+      help
+      exit 0
+      ;;
+	esac
+done
+shift $((OPTIND -1))
+
+#==============================================================================
+# RUN SCRIPT
+#==============================================================================
+
+for function in $@; do
+  if [[ $(type -t ${function}) == function ]]; then
+    eval ${function}
+  fi
+done
+
+[[ $(type -t foo) == function ]] && echo "Foo exists"
+hello
+
+if [[ "${verboseMode}" == "true" ]]; then
+  duration=$SECONDS
+  echo "#############################################################" | dbg i e
+  echo "log file.......: ${logFile}" | dbg i v
+  echo "$((${duration} / 60)) minutes and $((${duration} % 60)) seconds elapsed." | dbg i v
+  echo "#############################################################" | dbg i e
+  if [[ "${debugMode}" == "true" ]] && [[ "${debugSend}" == "true" ]]; then
+    send -a ${logFile} "Debug Report" "See attached report."
+  fi
+fi
+
+if [[ "${debugMode}" == "true" ]] && [[ "${debugError}" == "true" ]]; then
+  if [[ -f "${logFile}" ]]; then
+    case "${OS}" in
+      Mac)cat ${logFile} | egrep '(✗|!)';;
+      *)cat ${logFile} | egrep '✗|!';;
+    esac;
+  fi
+fi
+
+exit 0
