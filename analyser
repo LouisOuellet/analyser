@@ -1,0 +1,146 @@
+#!/bin/bash
+#==============================================================================
+#TITLE:            analyser
+#DESCRIPTION:      This tool analyses various system logs for key information
+#AUTHOR:           Louis Ouellet
+#DATE:             2022-03-04
+#VERSION:          22.03-04
+
+#==============================================================================
+# INIT
+#==============================================================================
+
+# Pull Basher
+if [[ ! -f "${scriptDirectory}vendor/basher/basher" ]]; then
+  git submodule update
+fi
+
+# Source Basher
+source ${scriptDirectory}vendor/basher/basher
+
+#==============================================================================
+# SCRIPT PERSONALISATION
+#==============================================================================
+
+# Script Personalisation
+helpOptions="${helpOptions}"
+
+#==============================================================================
+# FUNCTIONS
+#==============================================================================
+
+function vmail_maxUser(){
+  accounts="/tmp/accounts.list"
+  vmail_maxUser="/tmp/vmail.pid"
+  if [[ -f "${accounts}" ]]; then rm ${accounts}; fi
+  if [[ -f "${vmail_maxUser}" ]]; then
+    if ps -p $(cat ${vmail_maxUser}) > /dev/null; then kill $(cat ${vmail_maxUser}); fi
+    rm ${vmail_maxUser}
+  fi
+  while true; do
+    for account in $(cat /var/log/syslog | grep 'Inotify instance limit for user' | grep 'Increase /proc/sys/fs/inotify/max_user_instances' | cut -d\( -f2 | cut -d\) -f1); do
+      touch ${accounts}
+      if [[ ${account} =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && [[ "$(cat ${accounts} 2> /dev/null | grep ${account})" == "" ]]; then
+        echo ${account} | tee -a ${accounts} | dbg i c
+      fi
+    done
+  done &
+  if [[ ! -f "${vmail_maxUser}" ]]; then touch ${vmail_maxUser}; fi
+  echo $! > ${vmail_maxUser}
+  while read -sn 1 key && [[ ${key} != 'q' ]]; do
+    echo "Key ${key}" > /dev/null
+  done
+  kill %1
+}
+
+function sasl(){
+  ips="/tmp/ips.list"
+  sasl="/tmp/sasl.pid"
+  if [[ -f "${ips}" ]]; then rm ${ips}; fi
+  if [[ -f "${sasl}" ]]; then
+    if ps -p $(cat ${sasl}) > /dev/null; then kill $(cat ${sasl}); fi
+    rm ${sasl}
+  fi
+  while true; do
+    for ip in $(cat /var/log/syslog | grep 'SASL LOGIN authentication failed' | cut -d[ -f3 | cut -d] -f1); do
+      touch ${ips}
+      if [[ ${ip} =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && [[ "$(cat ${ips} 2> /dev/null | grep ${ip})" == "" ]]; then
+        echo ${ip} | tee -a ${ips} | dbg i c
+      fi
+    done
+  done &
+  if [[ ! -f "${sasl}" ]]; then touch ${sasl}; fi
+  echo $! > ${sasl}
+  while read -sn 1 key && [[ ${key} != 'q' ]]; do
+    echo "Key ${key}" > /dev/null
+    echo "Do you want to send an email?[y/n]"
+    read email
+    if [[ "${email}" == "y" ]] || [[ "${email}" == "Y" ]]; then
+      send -a ${ips} "SASL LOGIN authentication Report" "See attached report."
+    fi
+  done
+  kill %1
+}
+
+#==============================================================================
+# RUN OPTIONS & FUNCTIONS
+#==============================================================================
+
+parameters=
+while getopts "${opts}p:" option; do
+	case "${option}" in
+    p)
+      parameters="${parameters} ${OPTARG}"
+      ;;
+    -)
+      case "${OPTARG}" in
+        *=*)
+          val=${OPTARG#*=}
+          opt=${OPTARG%=$val}
+          lookup "-${opt}" ${val}
+          ;;
+        *)
+          val="${!OPTIND}"
+          OPTIND=$((OPTIND +1))
+          lookup "-${OPTARG}" ${val}
+          ;;
+      esac
+      ;;
+    *)
+      lookup "${option}" ${OPTARG}
+      ;;
+	esac
+done
+shift $((OPTIND -1))
+
+#==============================================================================
+# RUN SCRIPT
+#==============================================================================
+
+for function in $@; do
+  if [[ $(type -t ${function}) == function ]]; then
+    eval ${function}
+  fi
+done
+
+if [[ "${verboseMode}" == "true" ]]; then
+  duration=$SECONDS
+  echo "#############################################################" | dbg i e
+  echo "log file.......: ${logFile}" | dbg i v
+  echo "$((${duration} / 60)) minutes and $((${duration} % 60)) seconds elapsed." | dbg i v
+  echo "#############################################################" | dbg i e
+  if [[ "${debugMode}" == "true" ]] && [[ "${debugSend}" == "true" ]]; then
+    send -a ${logFile} "Debug Report" "See attached report."
+  fi
+fi
+
+if [[ "${debugMode}" == "true" ]] && [[ "${debugError}" == "true" ]]; then
+  if [[ -f "${logFile}" ]]; then
+    case "${OS}" in
+      Mac)cat ${logFile} | egrep '(✗|!)';;
+      *)cat ${logFile} | egrep '✗|!';;
+    esac;
+  fi
+fi
+
+exit 0
