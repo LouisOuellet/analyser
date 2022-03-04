@@ -75,9 +75,6 @@ for function in $@; do
   fi
 done
 
-[[ $(type -t foo) == function ]] && echo "Foo exists"
-hello
-
 if [[ "${verboseMode}" == "true" ]]; then
   duration=$SECONDS
   echo "#############################################################" | dbg i e
