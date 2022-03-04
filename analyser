@@ -39,7 +39,7 @@ function sasl(){
   fi
   while true; do
     for ip in $(cat /var/log/syslog | grep 'SASL LOGIN authentication failed' | cut -d[ -f3 | cut -d] -f1); do
-      if [[ ! -f "${ips}" ]]; then touch ${ips}; fi
+      touch ${ips}
       if [[ $ip =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && [[ "$(cat ${ips} | grep $ip)" == "" ]]; then
         echo $ip | tee -a ${ips} | dbg i c
       fi
