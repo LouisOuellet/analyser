@@ -73,13 +73,15 @@ function sasl(){
   echo $! > ${sasl}
   while read -sn 1 key && [[ ${key} != 'q' ]]; do
     echo "Key ${key}" > /dev/null
-    echo "Do you want to send an email?[y/n]"
-    read email
-    if [[ "${email}" == "y" ]] || [[ "${email}" == "Y" ]]; then
-      send -a ${ips} "SASL LOGIN authentication Report" "See attached report."
-    fi
   done
   kill %1
+  if [[ "${debugSend}" != "true" ]]; then
+    echo "Do you want to send an email?[y/n]"
+    read email
+  fi
+  if [[ "${email}" == "y" ]] || [[ "${email}" == "Y" ]] || [[ "${debugSend}" == "true" ]]; then
+    send -a ${ips} "SASL LOGIN authentication Report" "See attached report."
+  fi
 }
 
 #==============================================================================
