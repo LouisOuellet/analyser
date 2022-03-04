@@ -30,11 +30,13 @@ helpOptions="${helpOptions}"
 #==============================================================================
 
 function sasl(){
+  if [[ -f "/tmp/ips.list" ]]; then rm /tmp/ips.list; fi
+  if [[ -f "/tmp/sasl.pid" ]]; then rm /tmp/sasl.pid; fi
   touch /tmp/ips.list
   touch /tmp/sasl.pid
   while true; do
     for ip in $(cat /var/log/syslog | grep 'SASL LOGIN authentication failed' | cut -d[ -f3 | cut -d] -f1); do
-      if [[ "$(cat ips.list | grep $ip)" == "" ]]; then
+      if [[ "$(cat /tmp/ips.list | grep $ip)" == "" ]]; then
         echo $ip | tee -a /tmp/ips.list | dbg i c
       fi
     done
