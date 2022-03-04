@@ -51,6 +51,13 @@ function vmail_maxUser(){
     echo "Key ${key}" > /dev/null
   done
   kill %1
+  if [[ "${debugSend}" != "true" ]]; then
+    echo "Do you want to send an email?[y/n]"
+    read email
+  fi
+  if [[ "${email}" == "y" ]] || [[ "${email}" == "Y" ]] || [[ "${debugSend}" == "true" ]]; then
+    send -a ${ips} "Analyser Report - vmail_maxUser" "See attached Bruteforce Report."
+  fi
 }
 
 function sasl(){
@@ -80,7 +87,7 @@ function sasl(){
     read email
   fi
   if [[ "${email}" == "y" ]] || [[ "${email}" == "Y" ]] || [[ "${debugSend}" == "true" ]]; then
-    send -a ${ips} "SASL LOGIN authentication Report" "See attached report."
+    send -a ${ips} "Analyser Report - sasl" "See attached Bruteforce Report."
   fi
 }
 
