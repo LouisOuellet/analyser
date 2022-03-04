@@ -43,7 +43,7 @@ function sasl(){
       fi
     done
   done &
-  echo %1 > ${sasl}
+  echo $! > ${sasl}
   while read -sn 1 key && [[ ${key} != 'q' ]]; do
     echo "Key ${key}" > /dev/null
   done
