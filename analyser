@@ -37,15 +37,15 @@ function sasl(){
     if ps -p $(cat ${sasl}) > /dev/null; then kill $(cat ${sasl}); fi
     rm ${sasl}
   fi
-  touch ${ips}
-  touch ${sasl}
   while true; do
     for ip in $(cat /var/log/syslog | grep 'SASL LOGIN authentication failed' | cut -d[ -f3 | cut -d] -f1); do
+      if [[ ! -f "${ips}" ]]; then touch ${ips}; fi
       if [[ $ip =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && [[ "$(cat ${ips} | grep $ip)" == "" ]]; then
         echo $ip | tee -a ${ips} | dbg i c
       fi
     done
   done &
+  if [[ ! -f "${sasl}" ]]; then touch ${sasl}; fi
   echo $! > ${sasl}
   while read -sn 1 key && [[ ${key} != 'q' ]]; do
     echo "Key ${key}" > /dev/null
