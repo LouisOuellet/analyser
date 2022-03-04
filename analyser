@@ -29,6 +29,30 @@ helpOptions="${helpOptions}"
 # FUNCTIONS
 #==============================================================================
 
+function vmail_maxUser(){
+  accounts="/tmp/accounts.list"
+  vmail_maxUser="/tmp/vmail.pid"
+  if [[ -f "${accounts}" ]]; then rm ${accounts}; fi
+  if [[ -f "${vmail_maxUser}" ]]; then
+    if ps -p $(cat ${vmail_maxUser}) > /dev/null; then kill $(cat ${vmail_maxUser}); fi
+    rm ${vmail_maxUser}
+  fi
+  while true; do
+    for account in $(cat /var/log/syslog | grep 'Inotify instance limit for user' | grep 'Increase /proc/sys/fs/inotify/max_user_instances' | cut -d\( -f2 | cut -d\) -f1); do
+      touch ${accounts}
+      if [[ ${account} =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && [[ "$(cat ${accounts} 2> /dev/null | grep ${account})" == "" ]]; then
+        echo ${account} | tee -a ${accounts} | dbg i c
+      fi
+    done
+  done &
+  if [[ ! -f "${vmail_maxUser}" ]]; then touch ${vmail_maxUser}; fi
+  echo $! > ${vmail_maxUser}
+  while read -sn 1 key && [[ ${key} != 'q' ]]; do
+    echo "Key ${key}" > /dev/null
+  done
+  kill %1
+}
+
 function sasl(){
   ips="/tmp/ips.list"
   sasl="/tmp/sasl.pid"
