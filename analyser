@@ -30,6 +30,7 @@ helpOptions="${helpOptions}"
 #==============================================================================
 
 function vmail_maxUser(){
+  log="/var/log/syslog"
   accounts="/tmp/accounts.list"
   vmail_maxUser="/tmp/vmail.pid"
   if [[ -f "${accounts}" ]]; then rm ${accounts}; fi
@@ -37,30 +38,35 @@ function vmail_maxUser(){
     if ps -p $(cat ${vmail_maxUser}) > /dev/null; then kill $(cat ${vmail_maxUser}); fi
     rm ${vmail_maxUser}
   fi
-  while true; do
-    for account in $(cat /var/log/syslog | grep 'Inotify instance limit for user' | grep 'Increase /proc/sys/fs/inotify/max_user_instances' | cut -d\( -f2 | cut -d\) -f1); do
-      touch ${accounts}
-      if [[ ${account} =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && [[ "$(cat ${accounts} 2> /dev/null | grep ${account})" == "" ]]; then
-        echo ${account} | tee -a ${accounts} | dbg i c
-      fi
+  if [[ -f "${log}" ]]; then
+    while true; do
+      for account in $(cat ${log} | grep 'Inotify instance limit for user' | grep 'Increase /proc/sys/fs/inotify/max_user_instances' | cut -d\( -f2 | cut -d\) -f1); do
+        touch ${accounts}
+        if [[ ${account} =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && [[ "$(cat ${accounts} 2> /dev/null | grep ${account})" == "" ]]; then
+          echo ${account} | tee -a ${accounts} | dbg i c
+        fi
+      done
+    done &
+    if [[ ! -f "${vmail_maxUser}" ]]; then touch ${vmail_maxUser}; fi
+    echo $! > ${vmail_maxUser}
+    while read -sn 1 key && [[ ${key} != 'q' ]]; do
+      echo "Key ${key}" > /dev/null
     done
-  done &
-  if [[ ! -f "${vmail_maxUser}" ]]; then touch ${vmail_maxUser}; fi
-  echo $! > ${vmail_maxUser}
-  while read -sn 1 key && [[ ${key} != 'q' ]]; do
-    echo "Key ${key}" > /dev/null
-  done
-  kill %1
-  if [[ "${debugSend}" != "true" ]]; then
-    echo "Do you want to send an email?(n)[y/n]"
-    read email
-  fi
-  if [[ "${email}" == "y" ]] || [[ "${email}" == "Y" ]] || [[ "${debugSend}" == "true" ]]; then
-    send -a ${ips} "Analyser Report - vmail_maxUser" "See attached Bruteforce Report."
+    kill %1
+    if [[ "${debugSend}" != "true" ]]; then
+      echo "Do you want to send an email?(n)[y/n]"
+      read email
+    fi
+    if [[ "${email}" == "y" ]] || [[ "${email}" == "Y" ]] || [[ "${debugSend}" == "true" ]]; then
+      send -a ${ips} "Analyser Report - vmail_maxUser" "See attached Bruteforce Report."
+    fi
+  else
+    error "${log} file does not exist!"
   fi
 }
 
 function sasl(){
+  log="/var/log/syslog"
   ips="/tmp/ips.list"
   sasl="/tmp/sasl.pid"
   if [[ -f "${ips}" ]]; then rm ${ips}; fi
@@ -68,26 +74,30 @@ function sasl(){
     if ps -p $(cat ${sasl}) > /dev/null; then kill $(cat ${sasl}); fi
     rm ${sasl}
   fi
-  while true; do
-    for ip in $(cat /var/log/syslog | grep 'SASL LOGIN authentication failed' | cut -d[ -f3 | cut -d] -f1); do
-      touch ${ips}
-      if [[ ${ip} =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && [[ "$(cat ${ips} 2> /dev/null | grep ${ip})" == "" ]]; then
-        echo ${ip} | tee -a ${ips} | dbg i c
-      fi
+  if [[ -f "${log}" ]]; then
+    while true; do
+      for ip in $(cat ${log} | grep 'SASL LOGIN authentication failed' | cut -d[ -f3 | cut -d] -f1); do
+        touch ${ips}
+        if [[ ${ip} =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && [[ "$(cat ${ips} 2> /dev/null | grep ${ip})" == "" ]]; then
+          echo ${ip} | tee -a ${ips} | dbg i c
+        fi
+      done
+    done &
+    if [[ ! -f "${sasl}" ]]; then touch ${sasl}; fi
+    echo $! > ${sasl}
+    while read -sn 1 key && [[ ${key} != 'q' ]]; do
+      echo "Key ${key}" > /dev/null
     done
-  done &
-  if [[ ! -f "${sasl}" ]]; then touch ${sasl}; fi
-  echo $! > ${sasl}
-  while read -sn 1 key && [[ ${key} != 'q' ]]; do
-    echo "Key ${key}" > /dev/null
-  done
-  kill %1
-  if [[ "${debugSend}" != "true" ]]; then
-    echo "Do you want to send an email?(n)[y/n]"
-    read email
-  fi
-  if [[ "${email}" == "y" ]] || [[ "${email}" == "Y" ]] || [[ "${debugSend}" == "true" ]]; then
-    send -a ${ips} "Analyser Report - sasl" "See attached Bruteforce Report."
+    kill %1
+    if [[ "${debugSend}" != "true" ]]; then
+      echo "Do you want to send an email?(n)[y/n]"
+      read email
+    fi
+    if [[ "${email}" == "y" ]] || [[ "${email}" == "Y" ]] || [[ "${debugSend}" == "true" ]]; then
+      send -a ${ips} "Analyser Report - sasl" "See attached Bruteforce Report."
+    fi
+  else
+    error "${log} file does not exist!"
   fi
 }
 
@@ -128,19 +138,18 @@ shift $((OPTIND -1))
 
 if [[ "$1" != "" ]]; then
   function=$1
-  shift $@
   if [[ $(type -t ${function}) == function ]]; then
-    eval ${function} $@
+    eval ${function} ${@:2}
   else
     echo
-    echo "Invalid function: ${function} $@"
+    echo "Invalid function: ${function} ${@:2}"
     echo
     help
     exit 0
   fi
 else
   echo
-  echo "Invalid function: ${function} $@"
+  echo "Invalid function: ${function} ${@:2}"
   echo
   help
   exit 0
