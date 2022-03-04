@@ -39,7 +39,9 @@ function sasl(){
   fi
   if [[ ! -f "${ips}" ]]; then touch ${ips}; fi
   if [[ ! -f "${sasl}" ]]; then touch ${sasl}; fi
+  echo "[PID]$!"
   while true; do
+    echo "[PID]$$"
     echo $$ > ${sasl}
     for ip in $(cat /var/log/syslog | grep 'SASL LOGIN authentication failed' | cut -d[ -f3 | cut -d] -f1); do
       if [[ $ip =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && [[ "$(cat ${ips} | grep $ip)" == "" ]]; then
