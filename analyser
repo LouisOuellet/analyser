@@ -82,20 +82,27 @@ function sasl(){
 #==============================================================================
 
 parameters=
-while getopts ":p:" option; do
+while getopts "${opts}p:" option; do
 	case "${option}" in
     p)
       parameters="${parameters} ${OPTARG}"
       ;;
-    \? )
-      echo "Invalid option: $OPTARG" 1>&2
-      help
-      exit 0
+    -)
+      case "${OPTARG}" in
+        *=*)
+          val=${OPTARG#*=}
+          opt=${OPTARG%=$val}
+          lookup "-${opt}" ${val}
+          ;;
+        *)
+          val="${!OPTIND}"
+          OPTIND=$((OPTIND +1))
+          lookup "-${OPTARG}" ${val}
+          ;;
+      esac
       ;;
-    : )
-      echo "Invalid option: $OPTARG requires an argument" 1>&2
-      help
-      exit 0
+    *)
+      lookup "${option}" ${OPTARG}
       ;;
 	esac
 done
