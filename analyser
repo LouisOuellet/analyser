@@ -128,7 +128,15 @@ shift $((OPTIND -1))
 
 for function in $@; do
   if [[ $(type -t ${function}) == function ]]; then
-    eval ${function}
+    if [[ "${function}" != "exec" ]] && [[ "${function}" != "pkg" ]] && [[ "${function}" != "send" ]] && [[ "${function}" != "dbg" ]] && [[ "${function}" != "error" ]]; then
+      eval ${function}
+    else
+      echo
+      echo "Invalid function: ${function}"
+      echo
+      help
+      exit 0
+    fi
   else
     echo
     echo "Invalid function: ${function}"
