@@ -52,7 +52,7 @@ function vmail_maxUser(){
   done
   kill %1
   if [[ "${debugSend}" != "true" ]]; then
-    echo "Do you want to send an email?[y/n]"
+    echo "Do you want to send an email?(n)[y/n]"
     read email
   fi
   if [[ "${email}" == "y" ]] || [[ "${email}" == "Y" ]] || [[ "${debugSend}" == "true" ]]; then
@@ -83,7 +83,7 @@ function sasl(){
   done
   kill %1
   if [[ "${debugSend}" != "true" ]]; then
-    echo "Do you want to send an email?[y/n]"
+    echo "Do you want to send an email?(n)[y/n]"
     read email
   fi
   if [[ "${email}" == "y" ]] || [[ "${email}" == "Y" ]] || [[ "${debugSend}" == "true" ]]; then
