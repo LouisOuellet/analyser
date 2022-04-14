@@ -71,6 +71,7 @@ function sasl(){
   passwords="/tmp/passwords.list"
   sasl="/tmp/sasl.pid"
   if [[ -f "${ips}" ]]; then rm ${ips}; fi
+  if [[ -f "${passwords}" ]]; then rm ${passwords}; fi
   if [[ -f "${sasl}" ]]; then
     if ps -p $(cat ${sasl}) > /dev/null; then kill $(cat ${sasl}); fi
     rm ${sasl}
