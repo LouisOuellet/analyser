@@ -84,7 +84,7 @@ function sasl(){
           echo ${ip} | tee -a ${ips} | dbg i c
           if [[ "${block}" == "y" ]] || [[ "${block}" == "Y" ]]; then
             if [[ "$(ip route show ${ip} | wc -l)" -eq 0 ]]; then
-              if [[ "${ip}" -ne "127.0.0.1" ]]; then
+              if [[ "${ip}" != "127.0.0.1" ]]; then
                 exec "route add -host ${ip} reject"
               fi
             fi
