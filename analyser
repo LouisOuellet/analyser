@@ -82,9 +82,9 @@ function sasl(){
         touch ${ips}
         if [[ ${ip} =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && [[ "$(cat ${ips} 2> /dev/null | grep ${ip})" == "" ]]; then
           echo ${ip} | tee -a ${ips} | dbg i c
-        fi
-        if [[ "${block}" == "y" ]] || [[ "${block}" == "Y" ]]; then
-          route add -host ${ip} reject
+          if [[ "${block}" == "y" ]] || [[ "${block}" == "Y" ]]; then
+            exec "route add -host ${ip} reject"
+          fi
         fi
       done
     done &
