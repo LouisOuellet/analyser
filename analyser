@@ -68,6 +68,7 @@ function vmail_maxUser(){
 function sasl(){
   log="/var/log/syslog"
   ips="/tmp/ips.list"
+  passwords="/tmp/passwords.list"
   sasl="/tmp/sasl.pid"
   if [[ -f "${ips}" ]]; then rm ${ips}; fi
   if [[ -f "${sasl}" ]]; then
@@ -89,6 +90,12 @@ function sasl(){
               fi
             fi
           fi
+        fi
+      done
+      for password in $(cat ${log} | grep 'SASL LOGIN authentication failed' | egrep -v 'Connection lost to authentication server' | cut -d: -f7); do
+        password=$(echo ${password} | xargs | base64 -d)
+        if [[ "$(cat ${passwords} 2> /dev/null | grep ${password})" == "" ]]; then
+          echo ${password} | tee -a ${passwords} | dbg i c
         fi
       done
     done &
