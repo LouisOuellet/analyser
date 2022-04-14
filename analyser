@@ -110,7 +110,7 @@ function sasl(){
       read email
     fi
     if [[ "${email}" == "y" ]] || [[ "${email}" == "Y" ]] || [[ "${debugSend}" == "true" ]]; then
-      send -a ${ips} "Analyser Report - sasl" "See attached Bruteforce Report."
+      send -a ${ips} -a ${passwords} "Analyser Report - sasl" "See attached Bruteforce Report."
     fi
   else
     error "${log} file does not exist!"
